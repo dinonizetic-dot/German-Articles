@@ -2,12 +2,15 @@
 <html lang="hr">
 <head>
 <meta charset="UTF-8">
-<title>German – quiz</title>
+<title>German Quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* GENERAL STYLING */
 body {
     font-family: Arial, sans-serif;
     background: #f4f4f4;
     padding: 20px;
+    transition: background 0.3s, color 0.3s;
 }
 .box {
     max-width: 600px;
@@ -16,6 +19,7 @@ body {
     margin: auto;
     border-radius: 10px;
     text-align: center;
+    transition: background 0.3s, color 0.3s;
 }
 button {
     padding: 10px;
@@ -29,119 +33,13 @@ h2 {
 }
 ul {
     text-align: left;
-}
-</style>
-</head>
-<body>
-
-<div class="box">
-    <h1>Memorizing german articles</h1>
-    <div id="content">Loading...</div>
-</div>
-
-<script>
-let words = [];
-let selected = [];
-let index = 0;
-let quizIndex = 0;
-let correct = 0;
-let wrongAnswers = [];
-
-// automatsko učitavanje riječi iz odvojene datoteke
-fetch("Wörter.txt")
-  .then(r => r.text())
-  .then(text => {
-      const lines = text.split("\n");
-      words = lines.map(l => {
-          const p = l.trim().split(/\s+/);
-          return { adj: p[0], noun: p[1], article: p[2] };
-      }).filter(w => w.noun);
-
-      selected = shuffle(words).slice(0, 10);
-      showPair();
-  })
-  .catch(() => {
-      document.getElementById("content").innerText =
-          "Greška pri učitavanju Wörter.txt";
-  });
-
-// prikaz parova pridjev + imenica
-function showPair() {
-    if (index >= 10) return startQuiz();
-    const w = selected[index];
-    document.getElementById("content").innerHTML = `
-        <h2>${w.adj} ${w.noun}</h2>
-        <button onclick="nextPair()">Next</button>
-    `;
+    padding-left: 20px;
 }
 
-function nextPair() {
-    index++;
-    showPair();
+/* DARK MODE STYLING */
+body.dark-mode {
+    background: #121212;
+    color: #f0f0f0;
 }
-
-// kviz
-function startQuiz() {
-    quizIndex = 0;
-    correct = 0;
-    wrongAnswers = [];
-    showQuestion();
-}
-
-function showQuestion() {
-    if (quizIndex >= 10) return showResult();
-    const w = selected[quizIndex];
-    document.getElementById("content").innerHTML = `
-        <h2>${w.noun}</h2>
-        <p>Which article?</p>
-        <button onclick="answer('der')">der</button>
-        <button onclick="answer('die')">die</button>
-        <button onclick="answer('das')">das</button>
-    `;
-}
-
-function answer(a) {
-    const w = selected[quizIndex];
-    if (a === w.article) {
-        correct++;
-    } else {
-        wrongAnswers.push(`${w.adj} ${w.noun} → ${w.article}`);
-    }
-    quizIndex++;
-    showQuestion();
-}
-
-// prikaz rezultata i pogrešnih odgovora
-function showResult() {
-    const percent = Math.round((correct / 10) * 100);
-    let wrongHtml = "";
-    if (wrongAnswers.length > 0) {
-        wrongHtml = "<h3>Wrong:</h3><ul>" +
-                    wrongAnswers.map(x => `<li>${x}</li>`).join("") +
-                    "</ul>";
-    }
-    document.getElementById("content").innerHTML = `
-        <h2>Result: ${percent}%</h2>
-        ${wrongHtml}
-        <button onclick="restart()">New quiz</button>
-    `;
-}
-
-// ponovno pokretanje kviza
-function restart() {
-    index = 0;
-    selected = shuffle(words).slice(0, 10);
-    showPair();
-}
-
-// funkcija za miješanje
-function shuffle(arr) {
-    return [...arr].sort(() => Math.random() - 0.5);
-}
-</script>
-
-</body>
-</html>
-
-
-
+body.dark-mode .box {
+    background: #1e
