@@ -42,4 +42,148 @@ body.dark-mode {
     color: #f0f0f0;
 }
 body.dark-mode .box {
-    background: #1e
+    background: #1e1e1e;
+    color: #f0f0f0;
+}
+button {
+    border: none;
+    border-radius: 5px;
+    background: #007bff;
+    color: white;
+    transition: background 0.3s;
+}
+button:hover {
+    background: #0056b3;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 500px) {
+    .box {
+        padding: 15px;
+    }
+    button {
+        font-size: 14px;
+        padding: 8px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h1>German Practice</h1>
+    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    <div id="content">Loading...</div>
+</div>
+
+<script>
+// DATA AND GAME VARIABLES
+let words = [];
+let selected = [];
+let index = 0;
+let quizIndex = 0;
+let correct = 0;
+let wrongAnswers = [];
+
+// LOAD WORDS FROM EXTERNAL FILE
+fetch("Wörter.txt")
+  .then(r => r.text())
+  .then(text => {
+      const lines = text.split("\n");
+      words = lines.map(l => {
+          const p = l.trim().split(/\s+/);
+          return { adj: p[0], noun: p[1], article: p[2] };
+      }).filter(w => w.noun);
+
+      selected = shuffle(words).slice(0, 10);
+      showPair();
+  })
+  .catch(() => {
+      document.getElementById("content").innerText =
+          "Error loading Wörter.txt";
+  });
+
+// SHOW ADJECTIVE + NOUN PAIRS
+function showPair() {
+    if (index >= 10) return startQuiz();
+    const w = selected[index];
+    document.getElementById("content").innerHTML = `
+        <h2>${w.adj} ${w.noun}</h2>
+        <button onclick="nextPair()">Next</button>
+    `;
+}
+
+function nextPair() {
+    index++;
+    showPair();
+}
+
+// START QUIZ
+function startQuiz() {
+    quizIndex = 0;
+    correct = 0;
+    wrongAnswers = [];
+    showQuestion();
+}
+
+// SHOW QUIZ QUESTION
+function showQuestion() {
+    if (quizIndex >= 10) return showResult();
+    const w = selected[quizIndex];
+    document.getElementById("content").innerHTML = `
+        <h2>${w.noun}</h2>
+        <p>Which article does it have?</p>
+        <button onclick="answer('der')">der</button>
+        <button onclick="answer('die')">die</button>
+        <button onclick="answer('das')">das</button>
+    `;
+}
+
+// HANDLE ANSWER
+function answer(a) {
+    const w = selected[quizIndex];
+    if (a === w.article) {
+        correct++;
+    } else {
+        wrongAnswers.push(`${w.adj} ${w.noun} → ${w.article}`);
+    }
+    quizIndex++;
+    showQuestion();
+}
+
+// SHOW RESULT AND WRONG ANSWERS
+function showResult() {
+    const percent = Math.round((correct / 10) * 100);
+    let wrongHtml = "";
+    if (wrongAnswers.length > 0) {
+        wrongHtml = "<h3>Wrong Answers:</h3><ul>" +
+                    wrongAnswers.map(x => `<li>${x}</li>`).join("") +
+                    "</ul>";
+    }
+    document.getElementById("content").innerHTML = `
+        <h2>Score: ${percent}%</h2>
+        ${wrongHtml}
+        <button onclick="restart()">New Quiz</button>
+    `;
+}
+
+// RESTART QUIZ
+function restart() {
+    index = 0;
+    selected = shuffle(words).slice(0, 10);
+    showPair();
+}
+
+// SHUFFLE ARRAY
+function shuffle(arr) {
+    return [...arr].sort(() => Math.random() - 0.5);
+}
+
+// TOGGLE DARK MODE
+function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+}
+</script>
+
+</body>
+</html>
