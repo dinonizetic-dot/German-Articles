@@ -86,7 +86,7 @@ let correct = 0;
 let wrongAnswers = [];
 
 // LOAD WORDS FROM EXTERNAL FILE
-fetch("Wörter.txt")
+fetch("Woerter.txt")
   .then(r => r.text())
   .then(text => {
       const lines = text.split("\n");
@@ -187,3 +187,4 @@ function toggleDarkMode() {
 
 </body>
 </html>
+
