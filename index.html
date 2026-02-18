@@ -168,3 +168,210 @@ body.dark-mode .modal-content{
 }
 </style>
 </head>
+<body>
+
+<div class="box">
+    <button id="themeBtn" class="dark-toggle secondary" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+
+    <h1>German Articles Trainer</h1>
+
+    <div class="progress-wrapper">
+        <div class="progress-bar">
+            <div id="progress" class="progress-fill"></div>
+        </div>
+        <div id="progressText" class="progress-text"></div>
+    </div>
+
+    <div id="content">Loading...</div>
+
+    <div style="margin-top:12px;">
+        <button class="secondary" style="width:auto;padding:8px 12px;" onclick="openMethod()">About the Method</button>
+    </div>
+</div>
+
+<script>
+let words = [];
+let selected = [];
+let index = 0;
+let quizIndex = 0;
+let correct = 0;
+let wrongAnswers = [];
+let QUIZ_SIZE = 10;
+
+fetch("Woerter.txt")
+  .then(r => r.text())
+  .then(text => {
+      const lines = text.split("\n");
+      words = lines.map(l => {
+          const p = l.trim().split(/\s+/);
+          return { adj: p[0], noun: p[1], article: p[2] };
+      }).filter(w => w.noun);
+
+      QUIZ_SIZE = Math.min(10, words.length);
+      selected = shuffle(words).slice(0, QUIZ_SIZE);
+      showPair();
+  })
+  .catch(() => {
+      document.getElementById("content").innerText =
+          "Error loading Woerter.txt";
+  });
+
+function updateProgress(current) {
+    const percent = Math.round((current / QUIZ_SIZE) * 100);
+    document.getElementById("progress").style.width = percent + "%";
+    document.getElementById("progressText").innerText =
+        `Question ${Math.min(current + 1, QUIZ_SIZE)} / ${QUIZ_SIZE}`;
+}
+
+function showPair() {
+    updateProgress(index);
+
+    if (index >= QUIZ_SIZE) return startQuiz();
+    const w = selected[index];
+
+    document.getElementById("content").innerHTML = `
+        <h2>${w.adj} ${w.noun}</h2>
+        <button onclick="nextPair()">Next</button>
+    `;
+}
+
+function nextPair() {
+    index++;
+    showPair();
+}
+
+function startQuiz() {
+    quizIndex = 0;
+    correct = 0;
+    wrongAnswers = [];
+    showQuestion();
+}
+
+function showQuestion() {
+    updateProgress(quizIndex);
+
+    if (quizIndex >= QUIZ_SIZE) return showResult();
+    const w = selected[quizIndex];
+
+    document.getElementById("content").innerHTML = `
+        <h2>${w.noun}</h2>
+        <p>Select the correct article</p>
+        <button onclick="answer('der', this)">der</button>
+        <button onclick="answer('die', this)">die</button>
+        <button onclick="answer('das', this)">das</button>
+    `;
+}
+
+function answer(a, btn) {
+    const w = selected[quizIndex];
+
+    const correctAnswer = a === w.article;
+
+    // visual feedback
+    if (btn) {
+        btn.classList.add(correctAnswer ? 'correct' : 'wrong');
+    }
+
+    if (correctAnswer) {
+        correct++;
+    } else {
+        wrongAnswers.push(`${w.adj} ${w.noun} → ${w.article}`);
+    }
+
+    // wait a bit so user can see color
+    setTimeout(() => {
+        quizIndex++;
+        showQuestion();
+    }, 500);
+}
+
+function showResult() {
+    updateProgress(QUIZ_SIZE);
+
+    const percent = Math.round((correct / QUIZ_SIZE) * 100);
+
+    let wrongHtml = "";
+    if (wrongAnswers.length > 0) {
+        wrongHtml = "<h3>Mistakes:</h3><ul>" +
+                    wrongAnswers.map(x => `<li>${x}</li>`).join("") +
+                    "</ul>";
+    }
+
+    document.getElementById("content").innerHTML = `
+        <h2>Result: ${percent}%</h2>
+        ${wrongHtml}
+        <button onclick="restart()">New Quiz</button>
+    `;
+}
+
+function restart() {
+    index = 0;
+    selected = shuffle(words).slice(0, QUIZ_SIZE);
+    showPair();
+}
+
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function toggleDarkMode() {
+    const isDark = document.body.classList.toggle("dark-mode");
+    localStorage.setItem("dark", isDark);
+
+    // change icon
+    const btn = document.getElementById("themeBtn");
+    if (btn) btn.innerText = isDark ? "☀️" : "🌙";
+}
+
+if (localStorage.getItem("dark") === "true") {
+    document.body.classList.add("dark-mode");
+    const b = document.getElementById("themeBtn");
+    if (b) b.innerText = "☀️";
+}
+
+function openMethod(){
+  document.getElementById('methodModal').style.display='block';
+}
+function closeMethod(){
+  document.getElementById('methodModal').style.display='none';
+}
+
+// close when clicking outside
+window.onclick=function(e){
+  const m=document.getElementById('methodModal');
+  if(e.target===m) m.style.display='none';
+}
+</script>
+
+
+<div id="methodModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeMethod()">✕</span>
+    <h2>Adjective Bridge Method™</h2>
+
+    <p><b>Commercial description</b></p>
+    <p>Adjective Bridge Method™ teaches German articles without forcing you to memorize der/die/das. Instead of dry repetition, every noun is learned through a highly associative adjective–noun pair in singular nominative form.</p>
+
+    <p>The article is intentionally omitted during the learning phase so the brain can attach gender naturally to meaning, not to grammar labels. Through exposure → recall → correction cycles, learners develop intuitive gender sense similar to native acquisition.</p>
+
+    <hr>
+
+    <p><b>Method Definition</b></p>
+    <ul>
+      <li>Adjective + noun pairs, singular nominative</li>
+      <li>Indefinite article intentionally omitted</li>
+      <li>Strong semantic association between adjective and noun</li>
+      <li>Two phases: associative exposure → active recall</li>
+      <li>Error‑based reinforcement</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>
+
